@@ -87,7 +87,7 @@ module MultK(out, in) //Returns bitshifted by number of bits i.e decimal is at b
     
     wire SumOuts [bits:1];
 
-    assign out = SumOuts[bits]
+    
 
     genvar i;
     generate
@@ -107,14 +107,18 @@ module MultK(out, in) //Returns bitshifted by number of bits i.e decimal is at b
     generate
         for (j = 1; j < bits; j = j + 1) begin : sumLoop
             //todo
+            AddSub #(.bits(bits)) jthAddSubber (
+                .out(out),
+                .in1(toSum[j]),
+                .in2(SumOuts[j-1]),
+                .sub(1'b0)
+            );
+
 
         end
     endgenerate
 
-
-
-
-
+    assign out = SumOuts[bits]
 
 
 endmodule
