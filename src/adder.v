@@ -18,21 +18,22 @@ module BitAdder(s,co,a,b,ci)
 
 endmodule
 
-module ParamAdder(in1,in2,out)
+module ParamAdder(out, in1, in2, c0)
     parameter bits = 4;
 
     input [bits - 1:0] in1;
     input [bits - 1:0] in2;
+    input c0;
     output [bits - 1 : 0] out;
 
     wire [bits - 1:0] carrys;
 
-    BitAdder ba0(
+    BitAdder ba0( 
         .s(out[0]), 
         .co(carrys[0]), 
         .a(in1[0]), 
         .b(in2[0]), 
-        .ci(1'b0)
+        .ci(c0)
         );
 
     genvar i;
@@ -47,5 +48,73 @@ module ParamAdder(in1,in2,out)
                 );
         end
     endgenerate
+
+endmodule
+
+module AddSub(out, in1, in2, sub);
+
+    parameter bits = 4;
+
+    output [bits-1:0] out;
+    input [bits-1:0] in1;
+    input [bits-1:0] in2;
+    input sub;
+
+    wire [bits-1:0] in2Prime;
+    wire c0;
+
+    assign in2Prime = sub ? ~in2 : in2;
+    assign c0 = sub;
+
+    ParamAdder #(.bits(bits)) AddSub_Instance (
+        .out(out),
+        .in1(in1),
+        .in2(in2Prime),
+        .c0(c0)
+    );
+
+endmodule
+
+module MultK(out, in) //Returns bitshifted by number of bits i.e decimal is at beginning
+    parameter bits = 4 //Number of bits for operation
+    parameter K = 4'b1011 //Value of K (from wikipedia) with 4 bits
+    parameter ZeroBit = 4'd0 //set to 0 with 'bits' number of bits
+
+    input in[bits-1:0];
+    output out[bits-1:0];
+
+    wire toSum [bits-1:0][2 * bits-1 :0]; //bits are unshifted. should be shifted left by the index.
+    
+    wire SumOuts [bits:1];
+
+    assign out = SumOuts[bits]
+
+    genvar i;
+    generate
+        for (i = 0; i < bits; i = i + 1) begin : toSumLoop
+            generate //we can generate based on K, making it optimized to the K specific multiplication
+                if K[i] == 0 begin
+                    assign toSum[i] = {ZeroBit, ZeroBit}
+                end else begin
+                    assign toSum[i] = {ZeroBit, in} << i
+                end
+            endgenerate
+        end
+    endgenerate
+
+    //Sum toSum
+    genvar j;
+    generate
+        for (j = 1; j < bits; j = j + 1) begin : sumLoop
+            //todo
+
+        end
+    endgenerate
+
+
+
+
+
+
 
 endmodule
