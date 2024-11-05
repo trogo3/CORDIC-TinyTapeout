@@ -76,16 +76,18 @@ module AddSub(out, in1, in2, sub);
 endmodule
 
 module MultK(out, in) //Returns bitshifted by number of bits i.e decimal is at beginning
-    parameter bits = 4 //Number of bits for operation
-    parameter K = 4'b1011 //Value of K (from wikipedia) with 4 bits
-    parameter ZeroBit = 4'd0 //set to 0 with 'bits' number of bits
+    parameter bits = 4; //Number of bits for operation
+    parameter K = 4'b1011; //Value of K (from wikipedia) with 4 bits
+    parameter ZeroBit = 4'd0; //set to 0 with 'bits' number of bits
 
-    input in[bits-1:0];
-    output out[bits-1:0];
+    input [bits-1:0] in;
+    output [2* bits-1:0] out;
 
-    wire toSum [bits-1:0][2 * bits-1 :0]; //bits are unshifted. should be shifted left by the index.
+    wire [bits-1:0] toSum[2 * bits-1 :0]; //bits are unshifted. should be shifted left by the index.
     
-    wire SumOuts [bits:1];
+    wire [bits-1:0] SumOuts[2 * bits-1 :0];
+
+    assign SumOuts[0] = {2*bits{1'b0}};
 
     
 
@@ -93,11 +95,10 @@ module MultK(out, in) //Returns bitshifted by number of bits i.e decimal is at b
     generate
         for (i = 0; i < bits; i = i + 1) begin : toSumLoop
             generate //we can generate based on K, making it optimized to the K specific multiplication
-                if K[i] == 0 begin
-                    assign toSum[i] = {ZeroBit, ZeroBit}
-                end else begin
-                    assign toSum[i] = {ZeroBit, in} << i
-                end
+                if (K[i] == 0)
+                    assign toSum[i] = {2*bits{1'b0}};
+                else
+                    assign toSum[i] = {bits{1'b0}, in} << i;
             endgenerate
         end
     endgenerate
@@ -105,10 +106,10 @@ module MultK(out, in) //Returns bitshifted by number of bits i.e decimal is at b
     //Sum toSum
     genvar j;
     generate
-        for (j = 1; j < bits; j = j + 1) begin : sumLoop
+        for (j = 1; j <= bits; j = j + 1) begin : sumLoop
             //todo
             AddSub #(.bits(bits)) jthAddSubber (
-                .out(out),
+                .out(SumOuts[j]),
                 .in1(toSum[j]),
                 .in2(SumOuts[j-1]),
                 .sub(1'b0)
